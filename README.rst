@@ -5,6 +5,8 @@ A simple Sudoku game.
 
 The game is in german, feel free to add localization.
 
+You are very welcome to use the generator, solver and checker from *sudoku.py* as a module too.
+
 .. image:: game.png
 
 Starting the game
@@ -16,4 +18,5 @@ On MacOS it is executable, so just double click the file.
 Credits
 _____________________
 Inspired by https://github.com/MorvanZhou/sudoku 
+
 Thanks for your work!

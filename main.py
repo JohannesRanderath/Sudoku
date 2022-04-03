@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, font
 import sudoku
 
 
@@ -13,9 +13,6 @@ def routine():
     elements = []
 
     # default constraints
-    field_width = 5
-    field_height = 2
-    field_font = ("default", 30)
     bg_color = "white"
 
     def game():
@@ -66,17 +63,17 @@ def routine():
 
         window.bind("<Key>", change_number)
 
-        args = {"width": field_width, "bg": bg_color, "font": field_font,
-                "height": field_height}  # basic arguments for cell's Label
+        args = {   # basic arguments for cell's Label
+            "bg": bg_color
+        }
+
         # Generate grid GUI with sudoku
         for i, row in enumerate(my_sudoku):
             for j, column in enumerate(row):
                 frm = tk.Frame(  # Every cell should have a border
                     highlightbackground="black",
                     highlightthickness=1,
-                    master=grid_frm,
-                    height=field_height,
-                    width=field_width
+                    master=grid_frm
                 )
 
                 args["master"] = frm
@@ -94,20 +91,32 @@ def routine():
                 # Make sudoku 3x3 squares visible by adding some space between them
                 padding_top = 5 if i % 3 == 0 else 0
                 padding_left = 5 if j % 3 == 0 else 0
-                # Display cells in strict grid.
-                frm.grid(row=i, column=j, pady=(padding_top, 0), padx=(padding_left, 0))
-                el.pack()
+                # Display cells in strict grid. Make the grid responsive to window size.
+                el.pack(fill=tk.BOTH, expand=True)
+                frm.grid(row=i, column=j, pady=(padding_top, 0), padx=(padding_left, 0), sticky="nsew")
 
-        grid_frm.pack()
+        grid_frm.pack(fill=tk.BOTH, expand=True)  # Make grid responsive
+        # Adjust font size after actual window size is known
+        window.after(1, resize)
         tk.mainloop()
 
     window = tk.Tk()
     window.title("Sudoku")
+    # Make window resize according to screen size, while big enough to display everything properly and as big as the
+    # screen allows by default.
+    window.aspect(32, 30, 32, 30)
+    window.minsize(554, 519)
+    window.geometry("1000x1000")
     frm_control_btns = tk.Frame(  # Upper row of buttons to control the game
         bg=bg_color
     )
     # Slider to set difficulty in percentage of masked cells. Default is 50, maximum is 90.
-    scale_dif = tk.Scale(master=frm_control_btns, from_=1, to=9, orient=tk.HORIZONTAL)
+    scale_dif = tk.Scale(
+        master=frm_control_btns,
+        from_=1,
+        to=9,
+        orient=tk.HORIZONTAL
+    )
     scale_dif.set(5)
 
     # Click listener and widget for New game button
@@ -190,8 +199,24 @@ def routine():
 
     frm_control_btns.pack(fill=tk.X)
 
+    def resize(event=None):
+        """
+        Change the font size of the grid labels according to the cell size
+        :param event: Config event, given by event handler
+        :return: None
+        """
+        frame_height = elements[0][0].master.winfo_height()  # All cells are of equal size
+        for row in elements:
+            for element in row:
+                element.config(font=("default", round(frame_height / 2.3)))
+
     # frame containing the game grid
     grid_frm = tk.Frame(bg=bg_color)
+    # Make grid frame responsive
+    for i in range(9):
+        grid_frm.columnconfigure(i, weight=1, uniform="cell")
+        grid_frm.rowconfigure(i, weight=1, uniform="cell")
+    grid_frm.bind("<Configure>", resize)
 
     # start a new game and initialize grid on startup
     new_game()

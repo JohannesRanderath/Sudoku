@@ -2,7 +2,6 @@
 import tkinter as tk
 from tkinter import messagebox
 import sudoku
-# TODO: License
 
 
 def routine():
@@ -11,6 +10,7 @@ def routine():
     """
     my_sudoku = []  # sudoku grid used for current game
     solution = []
+    elements = []
 
     # default constraints
     field_width = 5
@@ -24,9 +24,10 @@ def routine():
         :return: None
         """
         nonlocal my_sudoku
+        nonlocal elements
         active_field = None  # cell selected by click
 
-        elements = [[] for i in range(9)]  # Cells of the grid
+        elements = [[] for i in range(9)]  # Clear cells of the grid
 
         def change_active_field(r, c):
             """
@@ -45,7 +46,7 @@ def routine():
             """
             Key press handler. If a number is pressed and a cell is selected, the number is filled in to the cell.
             If backspace is pressed and a cell is selected, the cell's value is deleted.
-            :param event: key press event, that occured.
+            :param event: key press event, that occurred.
             :return: None
             """
             if active_field:
@@ -53,8 +54,15 @@ def routine():
                     elements[active_field["row"]][active_field["column"]].config(text="")
                     solution[active_field["row"]][active_field["column"]] = 0
                 elif event.char in ["1", "2", "3", "4", "5", "6", "7", "8", "9"]:
-                    elements[active_field["row"]][active_field["column"]].config(text=event.char)
+                    elements[active_field["row"]][active_field["column"]].config(text=event.char, fg="black")
                     solution[active_field["row"]][active_field["column"]] = int(event.char)
+                    # If the grid is entirely filled and no cell is still highlighted from last validation, valid the
+                    # grid automatically.
+                    # But actually fill the field before validating
+                    window.update_idletasks()
+                    if all(all(c != 0 for c in r) for r in solution) and \
+                            all(all(element["fg"] != "red" for element in r) for r in elements):
+                        check()
 
         window.bind("<Key>", change_number)
 
@@ -132,6 +140,13 @@ def routine():
                                                           "\nDu hast das Sudoku richtig gelöst!")
         else:
             messagebox.showerror(title="Leider falsch", message="Leider noch nicht ganz richtig :(")
+            # Find wrong fields (remember we made it very likely for the solution to be unique) and highlight them
+            # by changing their text color to red.
+            correct = sudoku.solve(my_sudoku)
+            for i, row in enumerate(solution):
+                for j, s in enumerate(row):
+                    if not solution[i][j] == correct[i][j]:
+                        elements[i][j].config(fg="red")
 
     btn_check = tk.Button(
         text="Überprüfen",
